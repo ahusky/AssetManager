@@ -67,13 +67,13 @@ final class Asset: Identifiable, Codable, ObservableObject {
         case .holding:
             endDate = Date()
         }
-        let days = Calendar.current.dateComponents([.day], from: purchaseDate, to: endDate).day ?? 0
+        let days = max(0, Calendar.current.dateComponents([.day], from: purchaseDate, to: endDate).day ?? 0)
         return amount * (actualReturnRate / 100.0) * Double(days) / 365.0
     }
 
-    /// 是否已过期
+    /// 是否已过期（精确到天，与 remainingDays 一致）
     var isExpired: Bool {
-        maturityDate < Date()
+        remainingDays == 0 && Calendar.current.startOfDay(for: maturityDate) < Calendar.current.startOfDay(for: Date())
     }
 
     /// 剩余天数

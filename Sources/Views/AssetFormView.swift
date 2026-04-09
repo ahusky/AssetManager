@@ -266,6 +266,10 @@ struct AssetFormView: View {
             purchaseDate = asset.purchaseDate
             maturityDate = asset.maturityDate
             status = asset.status
+            // 如果平台不在列表中，自动切换到手动输入模式
+            if !store.platforms.contains(asset.platform) && !asset.platform.isEmpty {
+                isCustomPlatform = true
+            }
         }
     }
 

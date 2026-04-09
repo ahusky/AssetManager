@@ -97,6 +97,16 @@ struct AssetListView: View {
         return holdingAssets.reduce(0.0) { $0 + $1.amount * $1.expectedReturnRate } / totalAmount
     }
 
+    /// 本年度已赎回笔数
+    private var redeemedCountThisYear: Int {
+        filteredAssets.filter { $0.status == .redeemed && isCurrentYear($0.maturityDate) }.count
+    }
+
+    /// 是否有筛选条件生效
+    private var hasActiveFilters: Bool {
+        !searchText.isEmpty || filterStatus != nil || !filterPlatform.isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             summaryBar
@@ -178,8 +188,13 @@ struct AssetListView: View {
                     .font(.title3.bold()).foregroundColor(.cyan)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text("资产笔数").font(.caption).foregroundColor(.secondary)
-                Text("\(filteredAssets.count) 笔").font(.title3.bold()).foregroundColor(.purple)
+                Text("持有/年度赎回").font(.caption).foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Text("\(holdingAssets.count)").font(.title3.bold()).foregroundColor(.purple)
+                    Text("/").font(.caption).foregroundColor(.secondary)
+                    Text("\(redeemedCountThisYear)").font(.title3.bold()).foregroundColor(.orange)
+                    Text("笔").font(.caption).foregroundColor(.secondary)
+                }
             }
             Spacer()
         }
@@ -229,6 +244,19 @@ struct AssetListView: View {
             }
 
             Spacer()
+
+            if hasActiveFilters {
+                Button(action: {
+                    searchText = ""
+                    filterStatus = nil
+                    filterPlatform = ""
+                }) {
+                    Label("重置", systemImage: "xmark.circle")
+                }
+                .buttonStyle(.bordered)
+                .tint(.secondary)
+                .help("清除所有筛选条件")
+            }
 
             Button(action: exportCSV) {
                 Label("导出 CSV", systemImage: "square.and.arrow.up")
@@ -359,6 +387,12 @@ struct AssetListView: View {
             .background(bgColor).foregroundColor(fgColor).cornerRadius(6)
     }
 
+    private static let dateFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        return df
+    }()
+
     private func csvEscape(_ value: String) -> String {
         if value.contains(",") || value.contains("\"") || value.contains("\n") {
             return "\"\(value.replacingOccurrences(of: "\"", with: "\"\""))\""
@@ -369,7 +403,7 @@ struct AssetListView: View {
     // MARK: - CSV 导出
     private func exportCSV() {
         let header = "状态,平台账户,项目,币种,金额,预期收益率(%),实际收益率(%),预期收益,实际收益,购买日期,到期日期,剩余天数"
-        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
+        let df = Self.dateFormatter
         let rows = filteredAssets.map { a in
             [csvEscape(a.status.rawValue), csvEscape(a.platform), csvEscape(a.project),
              a.currency.rawValue, String(format: "%.2f", a.amount),
