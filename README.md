@@ -1,7 +1,7 @@
 # AssetManager - 资产管理工具
 
 <p align="center">
-  <img src="ScreenShot.png" alt="OpenClaw Manager" width="711" height="518">
+  <img src="ScreenShot.png" alt="AssetManager" width="711" height="518">
 </p>
 
 一个简洁高效的 macOS 本地资产管理应用，基于 SwiftUI 构建，使用 JSON 文件持久化存储。
